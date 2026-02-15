@@ -72,13 +72,12 @@ router.get(
 );
 
 // Staff/Admin Routes
-router.get("/submissions", protect, staffOnly, adminOnly, getSubmissions);
-router.patch("/verify/:id", protect, staffOnly, adminOnly, verifyAchievement);
+router.get("/submissions", protect, staffOnly, getSubmissions);
+router.patch("/verify/:id", protect, staffOnly, verifyAchievement);
 router.get(
   "/submission/:id",
   protect,
   staffOnly,
-  adminOnly,
   getSubmissionDetails,
 );
 
@@ -101,7 +100,6 @@ router.get(
   "/admin/redemptions",
   protect,
   staffOnly,
-  adminOnly,
   getAllRedemptions,
 );
 router.patch(
@@ -121,7 +119,6 @@ router.get(
   "/export/submissions",
   protect,
   staffOnly,
-  adminOnly,
   exportSubmissionsToExcel,
 );
 router.get("/export/rules", protect, adminOnly, exportPointRulesToExcel);
@@ -130,7 +127,6 @@ router.get(
   "/export/redemptions",
   protect,
   staffOnly,
-  adminOnly,
   exportRedemptionsToExcel,
 );
 

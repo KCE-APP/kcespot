@@ -11,22 +11,22 @@ const {
 const User = require("../models/User");
 const { sendEventNotification } = require("../service/pushNotificationService");
 const upload = require("../middleware/upload");
-const { adminOnly, protect } = require("../middleware/authMiddleware");
+const { adminOnly, protect,staffOnly } = require("../middleware/authMiddleware");
 
-router.post("/post-event", protect, adminOnly, sendEventInfo)
+router.post("/post-event", protect,staffOnly, adminOnly, sendEventInfo)
 
 
-router.post("/", protect, adminOnly, upload.single("eventImage"), createEvent);
+router.post("/", protect,staffOnly,  upload.single("eventImage"), createEvent);
 router.get("/", protect, getEvents);
-router.get("/admin", protect, adminOnly, getEventsforAdmin);
+router.get("/admin", protect,staffOnly,  getEventsforAdmin);
 router.put(
   "/:id",
   protect,
-  adminOnly,
+  staffOnly,
   upload.single("eventImage"),
   updateEvent,
 );
-router.delete("/:id", protect, adminOnly, deleteEvent);
+router.delete("/:id", protect, staffOnly,deleteEvent);
 
 
 

@@ -9,7 +9,7 @@ const {
   getUser,
 } = require("../controllers/userController");
 const { savePushToken } = require("../controllers/notificationController");
-const { protect, adminOnly } = require("../middleware/authMiddleware");
+const { protect, adminOnly ,staffOnly} = require("../middleware/authMiddleware");
 
 
 //common for all users
@@ -18,10 +18,10 @@ router.post("/get-me", protect, getUser);
 
 
 // 🔐 ADMIN ACCESS ONLY
-router.get("/", protect, adminOnly, getUsers);
-router.post("/", protect, adminOnly, createUser);
+router.get("/", protect, staffOnly, getUsers);
+router.post("/", protect, createUser);
 router.patch("/:id", protect, updateUser);
-router.delete("/:id", protect, adminOnly, deleteUser);
+router.delete("/:id", protect, staffOnly, deleteUser);
 router.post("/save-push-token", protect, savePushToken);
 router.post("/save-token", protect, savePushToken); // Alias for compatibility
 
