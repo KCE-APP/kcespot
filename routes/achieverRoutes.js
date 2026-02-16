@@ -7,6 +7,7 @@ const {
   updateAchiever,
   deleteAchiever,
   updateReaction,
+  getAchieverReactions,
 } = require("../controllers/achieverController");
 
 const upload = require("../middleware/upload");
@@ -17,6 +18,7 @@ router.get("/", protect, getAchievers);
 router.get("/admin",protect,staffOnly,getAdminAchivers);
 router.put("/:id", protect, staffOnly, upload.any(), updateAchiever);
 router.delete("/:id", protect, staffOnly, deleteAchiever);
+router.get("/:id/reactions", protect, getAchieverReactions);
 router.patch("/reaction/:id", protect, updateReaction);
 
 module.exports = router;
