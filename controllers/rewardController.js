@@ -680,20 +680,31 @@ exports.getStudentAchievements = async (req, res) => {
 
     const reactionMap = {};
     achievers.forEach((achiever) => {
-      reactionMap[achiever.submissionId.toString()] = achiever.reactions;
+      reactionMap[achiever.submissionId.toString()] = {
+        reactions: achiever.reactions,
+        achieverId: achiever._id,
+      };
     });
 
-    // Attach reactions to achievements
-    achievements = achievements.map((sub) => ({
-      ...sub,
-      reactions: reactionMap[sub._id.toString()] || {
-        r1: 0,
-        r2: 0,
-        r3: 0,
-        r4: 0,
-        r5: 0,
-      },
-    }));
+    // Attach reactions and achieverId to achievements
+    achievements = achievements.map((sub) => {
+      const achieverData = reactionMap[sub._id.toString()] || {
+        reactions: {
+          r1: 0,
+          r2: 0,
+          r3: 0,
+          r4: 0,
+          r5: 0,
+        },
+        achieverId: null,
+      };
+
+      return {
+        ...sub,
+        reactions: achieverData.reactions,
+        achieverId: achieverData.achieverId,
+      };
+    });
 
     res.json({
       success: true,
