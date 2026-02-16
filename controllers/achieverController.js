@@ -151,16 +151,38 @@ exports.getAchievers = async (req, res) => {
       });
 
       // Attach to achievers
-      achievers = achievers.map((achiever) => ({
-        ...achiever,
-        userReaction: reactionMap[achiever._id.toString()] || null,
-      }));
+      achievers = achievers.map((achiever) => {
+        const reactions = achiever.reactions || {};
+        const totalReactions =
+          (reactions.r1 || 0) +
+          (reactions.r2 || 0) +
+          (reactions.r3 || 0) +
+          (reactions.r4 || 0) +
+          (reactions.r5 || 0);
+
+        return {
+          ...achiever,
+          userReaction: reactionMap[achiever._id.toString()] || null,
+          totalReactions,
+        };
+      });
     } else {
       // If no user is logged in (just in case), ensure field exists as null
-      achievers = achievers.map((achiever) => ({
-        ...achiever,
-        userReaction: null,
-      }));
+      achievers = achievers.map((achiever) => {
+        const reactions = achiever.reactions || {};
+        const totalReactions =
+          (reactions.r1 || 0) +
+          (reactions.r2 || 0) +
+          (reactions.r3 || 0) +
+          (reactions.r4 || 0) +
+          (reactions.r5 || 0);
+
+        return {
+          ...achiever,
+          userReaction: null,
+          totalReactions,
+        };
+      });
     }
 
     res.json({
@@ -217,16 +239,38 @@ exports.getAdminAchivers = async (req, res) => {
       });
 
       // Attach to achievers
-      achievers = achievers.map((achiever) => ({
-        ...achiever,
-        userReaction: reactionMap[achiever._id.toString()] || null,
-      }));
+      achievers = achievers.map((achiever) => {
+        const reactions = achiever.reactions || {};
+        const totalReactions =
+          (reactions.r1 || 0) +
+          (reactions.r2 || 0) +
+          (reactions.r3 || 0) +
+          (reactions.r4 || 0) +
+          (reactions.r5 || 0);
+
+        return {
+          ...achiever,
+          userReaction: reactionMap[achiever._id.toString()] || null,
+          totalReactions,
+        };
+      });
     } else {
       // If no user is logged in (just in case), ensure field exists as null
-      achievers = achievers.map((achiever) => ({
-        ...achiever,
-        userReaction: null,
-      }));
+      achievers = achievers.map((achiever) => {
+        const reactions = achiever.reactions || {};
+        const totalReactions =
+          (reactions.r1 || 0) +
+          (reactions.r2 || 0) +
+          (reactions.r3 || 0) +
+          (reactions.r4 || 0) +
+          (reactions.r5 || 0);
+
+        return {
+          ...achiever,
+          userReaction: null,
+          totalReactions,
+        };
+      });
     }
 
     res.json({
@@ -417,5 +461,34 @@ exports.updateReaction = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
+  }
+};
+// GET REACTIONS Details
+exports.getAchieverReactions = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { type, page = 1, limit = 20 } = req.query;
+
+    const query = { achiever: id };
+    if (type) {
+      query.type = type;
+    }
+
+    const count = await Reaction.countDocuments(query);
+    const reactions = await Reaction.find(query)
+      .populate("user", "name email rollNo department collegeName imageUrl") // Populate necessary user fields
+      .sort("-createdAt")
+      .limit(limit * 1)
+      .skip((page - 1) * limit);
+
+    res.json({
+      success: true,
+      data: reactions,
+      totalPages: Math.ceil(count / limit),
+      currentPage: Number(page),
+      totalItems: count,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };
