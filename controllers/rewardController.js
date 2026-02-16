@@ -666,10 +666,34 @@ exports.getStudentAchievements = async (req, res) => {
     }
 
     const count = await AchievementSubmission.countDocuments(query);
-    const achievements = await AchievementSubmission.find(query)
+    let achievements = await AchievementSubmission.find(query)
       .sort("-createdAt")
       .limit(limit * 1)
-      .skip((page - 1) * limit);
+      .skip((page - 1) * limit)
+      .lean();
+
+    // Fetch reactions from Achiever model
+    const submissionIds = achievements.map((sub) => sub._id);
+    const achievers = await Achiever.find({
+      submissionId: { $in: submissionIds },
+    }).select("submissionId reactions");
+
+    const reactionMap = {};
+    achievers.forEach((achiever) => {
+      reactionMap[achiever.submissionId.toString()] = achiever.reactions;
+    });
+
+    // Attach reactions to achievements
+    achievements = achievements.map((sub) => ({
+      ...sub,
+      reactions: reactionMap[sub._id.toString()] || {
+        r1: 0,
+        r2: 0,
+        r3: 0,
+        r4: 0,
+        r5: 0,
+      },
+    }));
 
     res.json({
       success: true,
