@@ -73,3 +73,51 @@ app.use("/api/check-aws", (req, res) => {
 app.use("/api/host-contribute", (req, res) => {
   return res.json({ message: "hello ace im spotlight" });
 });
+
+// Deep Link Redirection Route
+app.get("/event/:id", (req, res) => {
+  const eventId = req.params.id;
+  const appScheme = `karpagam-spotlight://event/${eventId}`;
+  // Fallback URL (APK Download Link, Expo Project Page, or Play Store)
+  const fallbackUrl = process.env.FALLBACK_URL || "https://expo.dev/@poovarasa13/my-app"; 
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>View Event</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; text-align: center; padding: 40px 20px; background-color: #f9fafb; }
+          .container { max-width: 500px; margin: 0 auto; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+          h1 { color: #111827; font-size: 24px; margin-bottom: 10px; }
+          p { color: #6b7280; font-size: 16px; margin-bottom: 25px; line-height: 1.5; }
+          .btn { display: inline-block; background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 5px; transition: opacity 0.2s; }
+          .btn:hover { opacity: 0.9; }
+          .btn-secondary { background-color: #f3f4f6; color: #374151; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h1>Open in Spotlight</h1>
+          <p>You can view this event in the Karpagam Spotlight app.</p>
+          
+          <a href="${appScheme}" class="btn">Open App</a>
+          
+          <div style="margin-top: 30px; border-top: 1px solid #e5e7eb; padding-top: 20px;">
+            <p style="font-size: 14px;">Don't have the app?</p>
+            <a href="${fallbackUrl}" class="btn btn-secondary">Download / Install</a>
+          </div>
+        </div>
+        
+        <script>
+          // Automatic redirect to app scheme
+          setTimeout(function() {
+            window.location.href = "${appScheme}";
+          }, 100);
+        </script>
+      </body>
+    </html>
+  `;
+  res.send(html);
+});
