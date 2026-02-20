@@ -100,6 +100,7 @@ exports.loginStaff = async (req, res) => {
         name: staff.name,
         role: staff.role,
         collegeName: staff.collegeName,
+        email: staff.email,
       },
     });
   } catch (error) {
