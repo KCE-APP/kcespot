@@ -37,7 +37,7 @@ const evaluateBadges = async (userId) => {
 };
 
 // Helper: Award Points
-const awardPoints = async (
+exports.awardPoints = async (
   userId,
   amount,
   reason,
