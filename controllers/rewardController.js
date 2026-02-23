@@ -14,6 +14,7 @@ const { ACHIEVEMENT_CATEGORIES } = require("../config/constants");
 const {
   sendSubmissionStatusNotification,
 } = require("../service/pushNotificationService");
+const { applyWatermark } = require("../service/imageService");
 
 // Helper: Badge Evaluation
 const evaluateBadges = async (userId) => {
@@ -63,6 +64,31 @@ exports.awardPoints = async (
   await evaluateBadges(userId);
 };
 
+const awardPoint = async (
+  userId,
+  amount,
+  reason,
+  referenceId,
+  referenceModel,
+) => {
+  const user = await User.findById(userId);
+  if (!user) return;
+
+  user.pointsBalance += amount;
+  user.lifetimePoints += amount;
+  await user.save();
+
+  await RewardPointsLedger.create({
+    studentId: userId,
+    amount,
+    type: "credit",
+    reason,
+    referenceId,
+    referenceModel,
+  });
+
+  await evaluateBadges(userId);
+};
 // @desc    Submit Achievement
 // @route   POST /api/rewards/submit
 exports.submitAchievement = async (req, res) => {
@@ -149,13 +175,18 @@ exports.verifyAchievement = async (req, res) => {
       }
 
       submission.pointsAwarded = pointsAwarded;
-      await awardPoints(
+      await awardPoint(
         submission.studentId,
         submission.pointsAwarded,
         `Achievement Approved: ${submission.title}`,
         submission._id,
         "AchievementSubmission",
       );
+
+      // Apply watermark to evidence image if it exists
+      if (submission.evidenceImage) {
+        await applyWatermark(submission.evidenceImage);
+      }
 
       // Auto-post to Achiever collection
       const student = await User.findById(submission.studentId);
@@ -334,6 +365,7 @@ exports.addRewardItem = async (req, res) => {
     let finalImageUrl = imageUrl;
     if (req.file) {
       finalImageUrl = req.file.path;
+      await applyWatermark(req.file.path);
     }
 
     const reward = await RewardCatalog.create({
