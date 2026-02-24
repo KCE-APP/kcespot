@@ -20,7 +20,7 @@ exports.protect = (req, res, next) => {
     });
   }
   const clientHeader = req.headers["x-app-client"];
-  if (clientHeader !== "kce-admin") {
+  if (clientHeader !== process.env.APP_CLIENT_ID) {
     return res.status(401).json({
       status: "failed",
       statusCode: 401,

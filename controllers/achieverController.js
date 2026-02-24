@@ -4,7 +4,7 @@ const User = require("../models/User");
 const {
   sendAchieverNotification,
 } = require("../service/pushNotificationService");
-const { optimizeImage, applyWatermark } = require("../service/imageService");
+const { optimizeImage } = require("../service/imageService");
 
 // CREATE
 exports.createAchiever = async (req, res) => {
