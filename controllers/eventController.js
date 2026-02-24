@@ -2,6 +2,7 @@ const eventEmailTemplate = require("./../templates/eventInfoTemplate.js");
 const Event = require("../models/Event.js");
 const User = require("../models/User.js");
 const { sendEventNotification } = require("../service/pushNotificationService");
+const { optimizeImage } = require("../service/imageService");
 const nodemailer = require("nodemailer");
 const mongoose = require("mongoose");
 const path = require("path");
@@ -13,7 +14,7 @@ exports.createEvent = async (req, res) => {
     const entryData = { ...req.body };
 
     if (req.file) {
-      entryData.eventImage = req.file.path;
+      entryData.eventImage = await optimizeImage(req.file.buffer, req.file.originalname);
     }
 
     const event = new Event(entryData);
@@ -146,7 +147,7 @@ exports.updateEvent = async (req, res) => {
     const updateData = { ...req.body };
 
     if (req.file) {
-      updateData.eventImage = req.file.path;
+      updateData.eventImage = await optimizeImage(req.file.buffer, req.file.originalname);
     }
 
     const updated = await Event.findByIdAndUpdate(id, updateData, {
