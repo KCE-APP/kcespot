@@ -35,33 +35,33 @@ exports.optimizeImage = async (buffer, originalName) => {
     // Handle watermarking if logo exists
     if (fs.existsSync(logoPath)) {
       const targetWidth = Math.min(metadata.width, 1080);
-      const logoWidth = Math.round(targetWidth * 0.15);
-      const padding = Math.round(logoWidth * 0.1);
+      const circleSize = Math.round(targetWidth * 0.18); // Circle diameter
+      const logoSize = Math.round(circleSize * 0.7); // Logo width inside circle
 
-      const logoBuffer = await sharp(logoPath).resize({ width: logoWidth }).toBuffer();
-      const logoMetadata = await sharp(logoBuffer).metadata();
+      // 1. Create the logo buffer
+      const logoBuffer = await sharp(logoPath)
+        .resize({ width: logoSize })
+        .toBuffer();
 
-      const background = await sharp({
-        create: {
-          width: logoMetadata.width + padding * 2,
-          height: logoMetadata.height + padding * 2,
-          channels: 4,
-          background: { r: 255, g: 255, b: 255, alpha: 0.8 }
-        }
-      })
-      .composite([{ input: logoBuffer, gravity: "center" }])
-      .png()
-      .toBuffer();
+      // 2. Create the white circle background
+      const circleBackground = Buffer.from(
+        `<svg width="${circleSize}" height="${circleSize}">
+          <circle cx="${circleSize / 2}" cy="${circleSize / 2}" r="${circleSize / 2}" fill="white" />
+        </svg>`
+      );
 
-      const logoOverlayMetadata = await sharp(background).metadata();
+      // 3. Composite logo onto the circle
+      const finalWatermark = await sharp(circleBackground)
+        .composite([{ input: logoBuffer, gravity: "center" }])
+        .png()
+        .toBuffer();
 
+      // 4. Composite final badge onto the main image (Bottom-Right)
       pipeline = pipeline.composite([
         {
-          input: background,
-          gravity: "southwest",
+          input: finalWatermark,
+          gravity: "southeast", // Bottom-Right
           blend: "over",
-          // We need current metadata of resized image for absolute positioning if gravity southwest isn't enough
-          // but Sharp's southwest gravity usually works fine for corners.
         },
       ]);
     }
@@ -78,69 +78,3 @@ exports.optimizeImage = async (buffer, originalName) => {
   }
 };
 
-/**
- * Applies a watermark logo to the target image. (Legacy support)
- * 
- * @param {string} inputPath - Path to the original image.
- * @param {string} outputPath - Path to save the watermarked image (can be the same as inputPath).
- * @returns {Promise<void>}
- */
-exports.applyWatermark = async (inputPath, outputPath = null) => {
-  try {
-    const logoPath = path.join(__dirname, "..", "assests", "KI_LOGO3.png");
-    
-    if (!fs.existsSync(inputPath)) {
-      throw new Error(`Input image not found: ${inputPath}`);
-    }
-    
-    if (!fs.existsSync(logoPath)) {
-      console.warn("Watermark logo not found, skipping watermarking.");
-      return;
-    }
-
-    // Load the input image to get dimensions
-    const image = sharp(inputPath);
-    const metadata = await image.metadata();
-    
-    // Resize logo to fit the image (e.g., 15% of the image width)
-    const logoWidth = Math.round(metadata.width * 0.15);
-    const padding = Math.round(logoWidth * 0.1); // 10% padding
-    
-    // Create a white background for the logo to ensure visibility on all images
-    const logoBuffer = await sharp(logoPath).resize({ width: logoWidth }).toBuffer();
-    const logoMetadata = await sharp(logoBuffer).metadata();
-    
-    const background = await sharp({
-      create: {
-        width: logoMetadata.width + padding * 2,
-        height: logoMetadata.height + padding * 2,
-        channels: 4,
-        background: { r: 255, g: 255, b: 255, alpha: 0.8 } // Semi-transparent white
-      }
-    })
-    .composite([{ input: logoBuffer, gravity: "center" }])
-    .png()
-    .toBuffer();
-
-    // Composite the logo with background onto the image
-    const watermarkedImage = await image
-      .composite([
-        {
-          input: background,
-          gravity: "southwest", // Bottom-left corner
-          blend: "over",
-          top: metadata.height - (logoMetadata.height + padding * 3), // Add some margin from edges
-          left: padding,
-        },
-      ])
-      .toBuffer();
-
-    // Save the watermarked image
-    await sharp(watermarkedImage).toFile(outputPath || inputPath);
-    
-    console.log(`Watermark applied to: ${outputPath || inputPath}`);
-  } catch (error) {
-    console.error("Error applying watermark:", error);
-    // We don't want to throw here to avoid breaking the main flow if watermarking fails
-  }
-};

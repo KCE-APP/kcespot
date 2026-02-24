@@ -109,16 +109,34 @@ exports.deleteUser = async (req, res) => {
 
 exports.getUser = async (req, res) => {
   try {
-    const { userId } = req.body;
-    if (!userId) {
-      return res.status(404).json({ message: "user id not found" });
-    }
-    const user = await User.findById(userId);
+    // Identify user from token (set by protect middleware)
+    const userId = req.user.id;
+    
+    const user = await User.findById(userId).select(
+      "-password -otp -otpExpires -resetPasswordOtp -resetPasswordExpires",
+    );
+    
     if (!user) {
-      return res.status(500).json({ message: "user not found" });
+      return res.status(404).json({
+        status: "failed",
+        statusCode: 404,
+        message: "User not found",
+      });
     }
-    return res.status(200).json({ message: "user info found", user });
+    
+    return res.status(200).json({
+      status: "success",
+      statusCode: 200,
+      message: "User info found",
+      user,
+    });
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    console.error("Get User Error:", error);
+    return res.status(500).json({
+      status: "failed",
+      statusCode: 500,
+      message: "Internal Server Error",
+      error: error.message,
+    });
   }
 };
