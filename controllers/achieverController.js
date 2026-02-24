@@ -4,7 +4,7 @@ const User = require("../models/User");
 const {
   sendAchieverNotification,
 } = require("../service/pushNotificationService");
-const { applyWatermark } = require("../service/imageService");
+const { optimizeImage, applyWatermark } = require("../service/imageService");
 
 // CREATE
 exports.createAchiever = async (req, res) => {
@@ -25,14 +25,12 @@ exports.createAchiever = async (req, res) => {
     if (req.files && req.files.length > 0) {
       for (const file of req.files) {
         if (file.fieldname === "posterImage") {
-          entryData.posterImage = file.path;
-          await applyWatermark(file.path);
+          entryData.posterImage = await optimizeImage(file.buffer, file.originalname);
         } else if (file.fieldname.startsWith("studentImage_")) {
           // Extract index from fieldname "studentImage_0", "studentImage_1", etc.
           const index = parseInt(file.fieldname.split("_")[1]);
           if (entryData.students && entryData.students[index]) {
-            entryData.students[index].imageUrl = file.path;
-            await applyWatermark(file.path);
+            entryData.students[index].imageUrl = await optimizeImage(file.buffer, file.originalname);
           }
         }
       }
@@ -312,13 +310,11 @@ exports.updateAchiever = async (req, res) => {
     if (req.files && req.files.length > 0) {
       for (const file of req.files) {
         if (file.fieldname === "posterImage") {
-          updateData.posterImage = file.path;
-          await applyWatermark(file.path);
+          updateData.posterImage = await optimizeImage(file.buffer, file.originalname);
         } else if (file.fieldname.startsWith("studentImage_")) {
           const index = parseInt(file.fieldname.split("_")[1]);
           if (updateData.students && updateData.students[index]) {
-            updateData.students[index].imageUrl = file.path;
-            await applyWatermark(file.path);
+            updateData.students[index].imageUrl = await optimizeImage(file.buffer, file.originalname);
           }
         }
       }

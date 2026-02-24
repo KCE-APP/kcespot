@@ -14,7 +14,7 @@ const { ACHIEVEMENT_CATEGORIES } = require("../config/constants");
 const {
   sendSubmissionStatusNotification,
 } = require("../service/pushNotificationService");
-const { applyWatermark } = require("../service/imageService");
+const { optimizeImage, applyWatermark } = require("../service/imageService");
 
 // Helper: Badge Evaluation
 const evaluateBadges = async (userId) => {
@@ -100,7 +100,10 @@ exports.submitAchievement = async (req, res) => {
 
     if (!student) return res.status(404).json({ message: "Student not found" });
 
-    const evidenceImage = req.file ? req.file.path : null;
+    let evidenceImage = null;
+    if (req.file) {
+      evidenceImage = await optimizeImage(req.file.buffer, req.file.originalname);
+    }
 
     if (!evidenceUrl && !evidenceImage) {
       return res.status(400).json({
@@ -175,7 +178,7 @@ exports.verifyAchievement = async (req, res) => {
       }
 
       submission.pointsAwarded = pointsAwarded;
-      await awardPoint(
+      await awardPointx(
         submission.studentId,
         submission.pointsAwarded,
         `Achievement Approved: ${submission.title}`,
@@ -364,8 +367,7 @@ exports.addRewardItem = async (req, res) => {
 
     let finalImageUrl = imageUrl;
     if (req.file) {
-      finalImageUrl = req.file.path;
-      await applyWatermark(req.file.path);
+      finalImageUrl = await optimizeImage(req.file.buffer, req.file.originalname);
     }
 
     const reward = await RewardCatalog.create({
@@ -389,7 +391,7 @@ exports.updateRewardItem = async (req, res) => {
   try {
     const updates = { ...req.body };
     if (req.file) {
-      updates.imageUrl = req.file.path;
+      updates.imageUrl = await optimizeImage(req.file.buffer, req.file.originalname);
     }
 
     const reward = await RewardCatalog.findByIdAndUpdate(

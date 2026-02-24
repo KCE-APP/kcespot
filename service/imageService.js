@@ -1,9 +1,85 @@
 const sharp = require("sharp");
 const path = require("path");
 const fs = require("fs");
+const crypto = require("crypto");
 
 /**
- * Applies a watermark logo to the target image.
+ * Optimizes an image: resizes to max width 1080px, converts to WebP (quality 75),
+ * and applies a watermark logo.
+ * 
+ * @param {Buffer} buffer - The image data buffer.
+ * @param {string} originalName - Original filename to extract extension or just for logging.
+ * @returns {Promise<string>} - The relative path to the saved WebP image.
+ */
+exports.optimizeImage = async (buffer, originalName) => {
+  try {
+    const uploadsDir = path.join(__dirname, "..", "uploads");
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    const filename = `img-${Date.now()}-${crypto.randomBytes(4).toString("hex")}.webp`;
+    const outputPath = path.join(uploadsDir, filename);
+    const logoPath = path.join(__dirname, "..", "assests", "KI_LOGO3.png");
+
+    let pipeline = sharp(buffer);
+    const metadata = await pipeline.metadata();
+
+    // Resize: max width 1080px, maintain aspect ratio, without enlargement
+    pipeline = pipeline.resize({
+      width: 1080,
+      withoutEnlargement: true,
+      fit: "inside"
+    });
+
+    // Handle watermarking if logo exists
+    if (fs.existsSync(logoPath)) {
+      const targetWidth = Math.min(metadata.width, 1080);
+      const logoWidth = Math.round(targetWidth * 0.15);
+      const padding = Math.round(logoWidth * 0.1);
+
+      const logoBuffer = await sharp(logoPath).resize({ width: logoWidth }).toBuffer();
+      const logoMetadata = await sharp(logoBuffer).metadata();
+
+      const background = await sharp({
+        create: {
+          width: logoMetadata.width + padding * 2,
+          height: logoMetadata.height + padding * 2,
+          channels: 4,
+          background: { r: 255, g: 255, b: 255, alpha: 0.8 }
+        }
+      })
+      .composite([{ input: logoBuffer, gravity: "center" }])
+      .png()
+      .toBuffer();
+
+      const logoOverlayMetadata = await sharp(background).metadata();
+
+      pipeline = pipeline.composite([
+        {
+          input: background,
+          gravity: "southwest",
+          blend: "over",
+          // We need current metadata of resized image for absolute positioning if gravity southwest isn't enough
+          // but Sharp's southwest gravity usually works fine for corners.
+        },
+      ]);
+    }
+
+    await pipeline
+      .webp({ quality: 75 })
+      .toFile(outputPath);
+
+    console.log(`Optimized WebP image saved: ${outputPath}`);
+    return `uploads/${filename}`;
+  } catch (error) {
+    console.error("Error optimizing image:", error);
+    throw new Error("Failed to process and optimize image.");
+  }
+};
+
+/**
+ * Applies a watermark logo to the target image. (Legacy support)
  * 
  * @param {string} inputPath - Path to the original image.
  * @param {string} outputPath - Path to save the watermarked image (can be the same as inputPath).
