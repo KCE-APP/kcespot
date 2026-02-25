@@ -318,13 +318,13 @@ exports.login = async (req, res) => {
     const accessToken = jwt.sign(
       { id: user._id, role: user.role, college: user.collegeName },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" },
+      { expiresIn: process.env.JWT_ACCESS_EXPIRY || "15m" },
     );
 
     const refreshToken = jwt.sign(
       { id: user._id },
       process.env.JWT_REFRESH_SECRET,
-      { expiresIn: "7d" },
+      { expiresIn: process.env.JWT_REFRESH_EXPIRY || "30d" },
     );
 
     user.refreshToken = refreshToken;
@@ -576,13 +576,13 @@ exports.refreshToken = async (req, res) => {
     const newAccessToken = jwt.sign(
       { id: user._id, role: user.role, college: user.collegeName },
       process.env.JWT_SECRET,
-      { expiresIn:  "1h" },
+      { expiresIn: process.env.JWT_ACCESS_EXPIRY || "15m" },
     );
 
     const newRefreshToken = jwt.sign(
       { id: user._id },
       process.env.JWT_REFRESH_SECRET,
-      { expiresIn:  "7d" },
+      { expiresIn: process.env.JWT_REFRESH_EXPIRY || "30d" },
     );
 
     // Save the new refresh token to database
