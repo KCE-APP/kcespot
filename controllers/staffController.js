@@ -234,17 +234,54 @@ exports.refreshStaffToken = async (req, res) => {
       return res.status(401).json({ message: "Invalid refresh token" });
     }
 
-    const accessToken = jwt.sign(
+    // Token Rotation: Generate NEW access and NEW refresh tokens
+    const newAccessToken = jwt.sign(
       { id: staff._id, role: staff.role },
       process.env.JWT_SECRET,
       { expiresIn: "1h" },
     );
 
+    const newRefreshToken = jwt.sign(
+      { id: staff._id },
+      process.env.JWT_REFRESH_SECRET,
+      { expiresIn: "7d" },
+    );
+
+    // Save the new refresh token to database
+    staff.refreshToken = newRefreshToken;
+    await staff.save();
+
     res.json({
       success: true,
-      token: accessToken,
+      token: newAccessToken,
+      refreshToken: newRefreshToken,
     });
   } catch (error) {
     res.status(401).json({ message: "Invalid or expired refresh token" });
+  }
+};
+
+// @desc    Staff Logout
+// @route   POST /api/auth/staff-logout
+exports.logoutStaff = async (req, res) => {
+  try {
+    const staffId = req.user.id; // From protect middleware
+
+    const staff = await Staff.findById(staffId);
+    if (staff) {
+      staff.refreshToken = undefined;
+      await staff.save();
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Staff logged out successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error during staff logout",
+      error: error.message,
+    });
   }
 };

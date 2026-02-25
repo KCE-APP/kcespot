@@ -572,17 +572,53 @@ exports.refreshToken = async (req, res) => {
       return res.status(401).json({ message: "Invalid refresh token" });
     }
 
-    const accessToken = jwt.sign(
+    // Token Rotation: Generate NEW access and NEW refresh tokens
+    const newAccessToken = jwt.sign(
       { id: user._id, role: user.role, college: user.collegeName },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" },
+      { expiresIn:  "1h" },
     );
+
+    const newRefreshToken = jwt.sign(
+      { id: user._id },
+      process.env.JWT_REFRESH_SECRET,
+      { expiresIn:  "7d" },
+    );
+
+    // Save the new refresh token to database
+    user.refreshToken = newRefreshToken;
+    await user.save();
 
     res.json({
       status: "success",
-      token: accessToken,
+      token: newAccessToken,
+      refreshToken: newRefreshToken,
     });
   } catch (err) {
     res.status(401).json({ message: "Invalid or expired refresh token" });
+  }
+};
+
+// LOGOUT
+exports.logout = async (req, res) => {
+  try {
+    const userId = req.user.id; // From protect middleware
+
+    const user = await User.findById(userId);
+    if (user) {
+      user.refreshToken = undefined;
+      await user.save();
+    }
+
+    res.status(200).json({
+      status: "success",
+      message: "Logged out successfully",
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: "failed",
+      message: "Error during logout",
+      error: err.message,
+    });
   }
 };
