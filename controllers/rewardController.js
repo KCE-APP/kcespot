@@ -14,7 +14,7 @@ const { ACHIEVEMENT_CATEGORIES } = require("../config/constants");
 const {
   sendSubmissionStatusNotification,
 } = require("../service/pushNotificationService");
-const { optimizeImage } = require("../service/imageService");
+const { optimizeImage, applyWatermark } = require("../service/imageService");
 
 // Helper: Badge Evaluation
 const evaluateBadges = async (userId) => {
