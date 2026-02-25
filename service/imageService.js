@@ -35,7 +35,7 @@ exports.optimizeImage = async (buffer, originalName) => {
     // Handle watermarking if logo exists
     if (fs.existsSync(logoPath)) {
       const targetWidth = Math.min(metadata.width, 1080);
-      const circleSize = Math.round(targetWidth * 0.18); // Circle diameter
+      const circleSize = Math.round(targetWidth * 0.10); // Circle diameter (Reduced to 10%)
       const logoSize = Math.round(circleSize * 0.7); // Logo width inside circle
 
       // 1. Create the logo buffer
@@ -102,8 +102,8 @@ exports.applyWatermark = async (inputPath, outputPath = null) => {
     const image = sharp(inputPath);
     const metadata = await image.metadata();
     
-    // Resize logo to fit the image (e.g., 15% of the image width)
-    const logoWidth = Math.round(metadata.width * 0.15);
+    // Resize logo to fit the image (Reduced to 10% of the image width)
+    const logoWidth = Math.round(metadata.width * 0.10);
     const padding = Math.round(logoWidth * 0.1); // 10% padding
     
     // Create a white background for the logo to ensure visibility on all images
