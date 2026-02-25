@@ -86,15 +86,25 @@ exports.loginStaff = async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const token = jwt.sign(
+    const accessToken = jwt.sign(
       { id: staff._id, role: staff.role },
       process.env.JWT_SECRET,
-      { expiresIn: "30d" },
+      { expiresIn: "1h" },
     );
+
+    const refreshToken = jwt.sign(
+      { id: staff._id },
+      process.env.JWT_REFRESH_SECRET,
+      { expiresIn: "7d" },
+    );
+
+    staff.refreshToken = refreshToken;
+    await staff.save();
 
     res.json({
       success: true,
-      token,
+      token: accessToken,
+      refreshToken: refreshToken,
       staff: {
         id: staff._id,
         name: staff.name,
@@ -204,5 +214,37 @@ exports.exportStaffToExcel = async (req, res) => {
     res.end();
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Refresh Staff Token
+// @route   POST /api/auth/staff-refresh-token
+exports.refreshStaffToken = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(400).json({ message: "Refresh token is required" });
+    }
+
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    const staff = await Staff.findById(decoded.id);
+
+    if (!staff || staff.refreshToken !== refreshToken) {
+      return res.status(401).json({ message: "Invalid refresh token" });
+    }
+
+    const accessToken = jwt.sign(
+      { id: staff._id, role: staff.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" },
+    );
+
+    res.json({
+      success: true,
+      token: accessToken,
+    });
+  } catch (error) {
+    res.status(401).json({ message: "Invalid or expired refresh token" });
   }
 };

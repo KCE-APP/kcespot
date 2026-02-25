@@ -315,11 +315,20 @@ exports.login = async (req, res) => {
       });
     }
 
-    const token = jwt.sign(
+    const accessToken = jwt.sign(
       { id: user._id, role: user.role, college: user.collegeName },
       process.env.JWT_SECRET,
-      { expiresIn: "1d" },
+      { expiresIn: "1h" },
     );
+
+    const refreshToken = jwt.sign(
+      { id: user._id },
+      process.env.JWT_REFRESH_SECRET,
+      { expiresIn: "7d" },
+    );
+
+    user.refreshToken = refreshToken;
+    await user.save();
 
     // Save Push Token if provided during login
     const { pushToken, fcmToken } = req.body;
@@ -343,7 +352,8 @@ exports.login = async (req, res) => {
         department: user.department,
         college: user.collegeName,
       },
-      token: token,
+      token: accessToken,
+      refreshToken: refreshToken,
     });
   } catch (err) {
     res.status(500).json({
@@ -543,5 +553,36 @@ exports.changePassword = async (req, res) => {
       message: "Internal Server Error",
       error: err.message,
     });
+  }
+};
+
+// REFRESH TOKEN
+exports.refreshToken = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(400).json({ message: "Refresh token is required" });
+    }
+
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    const user = await User.findById(decoded.id);
+
+    if (!user || user.refreshToken !== refreshToken) {
+      return res.status(401).json({ message: "Invalid refresh token" });
+    }
+
+    const accessToken = jwt.sign(
+      { id: user._id, role: user.role, college: user.collegeName },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" },
+    );
+
+    res.json({
+      status: "success",
+      token: accessToken,
+    });
+  } catch (err) {
+    res.status(401).json({ message: "Invalid or expired refresh token" });
   }
 };

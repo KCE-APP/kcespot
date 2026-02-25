@@ -11,8 +11,9 @@ const {
   verifyResetOtp,
   resetPassword,
   changePassword,
+  refreshToken,
 } = require("../controllers/authController");
-const { loginStaff } = require("../controllers/staffController");
+const { loginStaff, refreshStaffToken } = require("../controllers/staffController");
 
 // Registration Flow
 router.post("/register", register);
@@ -22,6 +23,8 @@ router.post("/resend-registration-otp", resendRegistrationOtp);
 // Login
 router.post("/login", login);
 router.post("/staff-login", loginStaff);
+router.post("/refresh-token", refreshToken);
+router.post("/staff-refresh-token", refreshStaffToken);
 
 // Password Reset Flow
 router.post("/forgot-password", forgotPassword);
