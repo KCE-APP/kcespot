@@ -21,6 +21,7 @@ const staffSchema = new mongoose.Schema(
     department: { type: String, required: true },
     assignedCategory: { type: String, enum: ACHIEVEMENT_CATEGORIES }, // For filtering submissions
     isDeleted: { type: Boolean, default: false },
+    refreshToken: { type: String },
   },
   { timestamps: true },
 );

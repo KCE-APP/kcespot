@@ -315,11 +315,20 @@ exports.login = async (req, res) => {
       });
     }
 
-    const token = jwt.sign(
+    const accessToken = jwt.sign(
       { id: user._id, role: user.role, college: user.collegeName },
       process.env.JWT_SECRET,
-      { expiresIn: "1d" },
+      { expiresIn: "1h" },
     );
+
+    const refreshToken = jwt.sign(
+      { id: user._id },
+      process.env.JWT_REFRESH_SECRET,
+      { expiresIn: "7d" },
+    );
+
+    user.refreshToken = refreshToken;
+    await user.save();
 
     // Save Push Token if provided during login
     const { pushToken, fcmToken } = req.body;
@@ -343,7 +352,8 @@ exports.login = async (req, res) => {
         department: user.department,
         college: user.collegeName,
       },
-      token: token,
+      token: accessToken,
+      refreshToken: refreshToken,
     });
   } catch (err) {
     res.status(500).json({
@@ -541,6 +551,73 @@ exports.changePassword = async (req, res) => {
       status: "failed",
       statusCode: 500,
       message: "Internal Server Error",
+      error: err.message,
+    });
+  }
+};
+
+// REFRESH TOKEN
+exports.refreshToken = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(400).json({ message: "Refresh token is required" });
+    }
+
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    const user = await User.findById(decoded.id);
+
+    if (!user || user.refreshToken !== refreshToken) {
+      return res.status(401).json({ message: "Invalid refresh token" });
+    }
+
+    // Token Rotation: Generate NEW access and NEW refresh tokens
+    const newAccessToken = jwt.sign(
+      { id: user._id, role: user.role, college: user.collegeName },
+      process.env.JWT_SECRET,
+      { expiresIn:  "1h" },
+    );
+
+    const newRefreshToken = jwt.sign(
+      { id: user._id },
+      process.env.JWT_REFRESH_SECRET,
+      { expiresIn:  "7d" },
+    );
+
+    // Save the new refresh token to database
+    user.refreshToken = newRefreshToken;
+    await user.save();
+
+    res.json({
+      status: "success",
+      token: newAccessToken,
+      refreshToken: newRefreshToken,
+    });
+  } catch (err) {
+    res.status(401).json({ message: "Invalid or expired refresh token" });
+  }
+};
+
+// LOGOUT
+exports.logout = async (req, res) => {
+  try {
+    const userId = req.user.id; // From protect middleware
+
+    const user = await User.findById(userId);
+    if (user) {
+      user.refreshToken = undefined;
+      await user.save();
+    }
+
+    res.status(200).json({
+      status: "success",
+      message: "Logged out successfully",
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: "failed",
+      message: "Error during logout",
       error: err.message,
     });
   }
