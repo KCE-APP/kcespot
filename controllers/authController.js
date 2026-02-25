@@ -315,9 +315,8 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Generate Token
     const token = jwt.sign(
-      { id: user._id, role: user.role },
+      { id: user._id, role: user.role, college: user.collegeName },
       process.env.JWT_SECRET,
       { expiresIn: "1d" },
     );
@@ -342,6 +341,7 @@ exports.login = async (req, res) => {
         email: user.email,
         role: user.role,
         department: user.department,
+        college: user.collegeName,
       },
       token: token,
     });
