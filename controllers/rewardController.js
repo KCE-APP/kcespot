@@ -178,7 +178,7 @@ exports.verifyAchievement = async (req, res) => {
       }
 
       submission.pointsAwarded = pointsAwarded;
-      await awardPointx(
+      await awardPoint(
         submission.studentId,
         submission.pointsAwarded,
         `Achievement Approved: ${submission.title}`,

@@ -113,19 +113,21 @@ exports.createAchiever = async (req, res) => {
 exports.getAchievers = async (req, res) => {
   try {
     const { page = 1, limit = 10, search = "", college = "" } = req.query;
-
+    console.log(req.query)
     const query = { isDeleted: false, status: true };
+
+    if (req.user && req.user.college) {
+      query.college = { $regex: `^${req.user.college}$`, $options: "i" };
+    } else if (college) {
+      query.college = { $regex: `^${college}$`, $options: "i" };
+    }
 
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: "i" } },
         { college: { $regex: search, $options: "i" } },
-        { description: { $regex: search, $options: "i" } }, // Added description for completeness
+        { description: { $regex: search, $options: "i" } },
       ];
-    }
-
-    if (college) {
-      query.college = { $regex: `^${college}$`, $options: "i" };
     }
 
     const count = await Achiever.countDocuments(query);
@@ -134,9 +136,9 @@ exports.getAchievers = async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit)
-      .lean(); // Use lean() to get plain JS objects
+      .lean(); 
 
-    // ENRICH DATA: Add userReaction field
+    
     if (req.user && req.user.id) {
       const achieverIds = achievers.map((a) => a._id);
 
@@ -145,13 +147,11 @@ exports.getAchievers = async (req, res) => {
         achiever: { $in: achieverIds },
       });
 
-      // Create a map: achieverId -> reactionType
       const reactionMap = {};
       userReactions.forEach((reaction) => {
         reactionMap[reaction.achiever.toString()] = reaction.type;
       });
 
-      // Attach to achievers
       achievers = achievers.map((achiever) => {
         const reactions = achiever.reactions || {};
         const totalReactions =
