@@ -89,7 +89,7 @@ exports.loginStaff = async (req, res) => {
     const accessToken = jwt.sign(
       { id: staff._id, role: staff.role },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_ACCESS_EXPIRY || "15m" },
+      { expiresIn: process.env.JWT_ACCESS_EXPIRY || "1hr" },
     );
 
     const refreshToken = jwt.sign(
