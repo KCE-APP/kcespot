@@ -89,13 +89,13 @@ exports.loginStaff = async (req, res) => {
     const accessToken = jwt.sign(
       { id: staff._id, role: staff.role },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" },
+      { expiresIn: process.env.JWT_ACCESS_EXPIRY || "15m" },
     );
 
     const refreshToken = jwt.sign(
       { id: staff._id },
       process.env.JWT_REFRESH_SECRET,
-      { expiresIn: "7d" },
+      { expiresIn: process.env.JWT_REFRESH_EXPIRY || "30d" },
     );
 
     staff.refreshToken = refreshToken;
@@ -238,13 +238,13 @@ exports.refreshStaffToken = async (req, res) => {
     const newAccessToken = jwt.sign(
       { id: staff._id, role: staff.role },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" },
+      { expiresIn: "10m" },
     );
 
     const newRefreshToken = jwt.sign(
       { id: staff._id },
       process.env.JWT_REFRESH_SECRET,
-      { expiresIn: "7d" },
+      { expiresIn: "30d" },
     );
 
     // Save the new refresh token to database
