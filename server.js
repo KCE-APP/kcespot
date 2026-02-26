@@ -58,7 +58,7 @@ app.use("/api/unstop", require("./routes/proxyRoutes"));
 app.use("/api/rewards", require("./routes/rewardRoutes"));
 app.use("/api/semester", require("./routes/semesterRoutes"));
 app.use("/api/staff", require("./routes/staffRoutes"));
-
+app.use("/api/career",require("./routes/careerRoutes.js"));
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
