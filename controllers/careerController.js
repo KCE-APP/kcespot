@@ -36,6 +36,11 @@ exports.getCareers= async (req,res) =>{
             query.$or=[{title:{$regex:search,$options:"i"}},{campus:{$regex:search,$options:"i"}}];
         }
 
+        if(campus)
+        {
+            query.campus = campus;
+        }
+
 
         const count=await Career.countDocuments(query);
         const careers=await Career.find(query)
@@ -65,6 +70,11 @@ exports.getCareersforAdmin= async (req,res) =>{
         if(search)
         {
             query.$or=[{title:{$regex:search,$options:"i"}},{campus:{$regex:search,$options:"i"}}];
+        }
+
+        if(campus)
+        {
+            query.campus = campus;
         }
 
 
