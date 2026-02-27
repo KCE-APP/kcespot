@@ -2,6 +2,8 @@ const mongoose = require("mongoose");
 
 const careerSchema = new mongoose.Schema({
    name: String,
+   title: String,
+   campus: String,
    imageUrl: String,
    description: String,
    isDeleted: { type: Boolean, default: false },
