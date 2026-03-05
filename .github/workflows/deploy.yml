@@ -30,7 +30,7 @@ jobs:
             nvm use 20
 
             # Navigate to directory
-            cd /home/ubuntu/be
+            cd /home/ubuntu/kcespot
 
             # Pull latest code
             git pull origin backend
