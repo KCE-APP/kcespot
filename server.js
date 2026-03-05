@@ -44,8 +44,28 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-// Handle preflight for all routes explicitly using Express 5 compatible syntax
-app.options("*any", cors(corsOptions));
+
+// 1. Request Logging - Vital for debugging connectivity
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path} - Origin: ${req.headers.origin}`);
+  next();
+});
+
+// 2. Manual Preflight & CORS Handler (Express 5 safe)
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin) || !origin) {
+    res.header("Access-Control-Allow-Origin", origin || "*");
+  }
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, x-app-client, ngrok-skip-browser-warning, Accept");
+  res.header("Access-Control-Allow-Credentials", "true");
+
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+  next();
+});
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
