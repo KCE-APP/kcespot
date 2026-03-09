@@ -322,6 +322,12 @@ exports.getCareerReactions = async (req, res) => {
         const { id } = req.params;
         const { type, page = 1, limit = 20 } = req.query;
 
+        // Fetch the career post to get total counts for each reaction type
+        const career = await Career.findById(id).select("reactions").lean();
+        if (!career) {
+            return res.status(404).json({ success: false, message: "Career post not found" });
+        }
+
         const query = { career: id };
         if (type) {
             query.type = type;
@@ -337,6 +343,7 @@ exports.getCareerReactions = async (req, res) => {
         res.json({
             success: true,
             data: reactions,
+            reactions: career.reactions, // Include the counts for each emoji type for UI tabs
             totalPages: Math.ceil(count / limit),
             currentPage: Number(page),
             totalItems: count,
