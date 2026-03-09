@@ -33,7 +33,8 @@ router.put(
 router.delete("/delete-career/:id", protect, adminOnly, staffOnly, deleteCareer);
 
 // Reaction Routes
-router.put("/reaction/:id", protect, updateReaction);
-router.get("/reaction/:id", protect, getCareerReactions);
+router.patch("/reaction/:id", protect, updateReaction); // Match achiever pattern (PATCH)
+router.get("/:id/reactions", protect, getCareerReactions); // Match achiever pattern (/ID/reactions)
+router.get("/reactions/:id", protect, getCareerReactions); // Support user's app call (/reactions/ID)
 
 module.exports = router;
