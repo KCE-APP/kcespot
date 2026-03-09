@@ -52,7 +52,9 @@ exports.getCareers= async (req,res) =>{
             data:careers,
             totalPages:Math.ceil(count/limit),
             currentPage:Number(page),
-            totalItems:count
+            totalItems:count,
+            status:"success",
+            statusCode:200
         })
     }catch(error)
     {
@@ -88,7 +90,9 @@ exports.getCareersforAdmin= async (req,res) =>{
             data:careers,
             totalPages:Math.ceil(count/limit),
             currentPage:Number(page),
-            totalItems:count
+            totalItems:count,
+            status:"success",
+            statusCode:200
         })
     }catch(error)
     {
@@ -119,7 +123,7 @@ exports.deleteCareer= async (req,res) =>{
     try{
         const {id}=req.params;
         await Career.findByIdAndUpdate(id,{isDeleted:true});
-        res.json({message:"Career deleted successfully (Soft)"});
+        res.json({message:"Career deleted successfully (Soft)",status:"success",statusCode:200});
     }catch(error)
     {
         res.status(500).json({error:error.message});
