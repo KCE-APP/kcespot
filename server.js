@@ -156,3 +156,7 @@ const handleDeepLink = (type, appSchemePrefix) => (req, res) => {
 app.get("/event/:id", handleDeepLink("event", "karpagam-spotlight://event/"));
 app.get("/achiever/:id", handleDeepLink("achiever", "karpagam-spotlight://achiever/"));
 app.get("/career/:id", handleDeepLink("career", "karpagam-spotlight://career/"));
+
+// Support for prefixed routes used by the app's share functionality
+app.get("/event/achiever/:id", handleDeepLink("achiever", "karpagam-spotlight://achiever/"));
+app.get("/event/career/:id", handleDeepLink("career", "karpagam-spotlight://career/"));
