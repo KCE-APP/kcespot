@@ -74,8 +74,8 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use("/uploads", express.static("uploads"));
 
 // ✅ ROUTES (paths must be EXACT)
-app.use("/api/events", require("./routes/eventRoutes"));
 app.use("/api/achievers", require("./routes/achieverRoutes"));
+app.use("/api/achiever", require("./routes/achieverRoutes"));
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/unstop", require("./routes/proxyRoutes"));
@@ -83,6 +83,9 @@ app.use("/api/rewards", require("./routes/rewardRoutes"));
 app.use("/api/semester", require("./routes/semesterRoutes"));
 app.use("/api/staff", require("./routes/staffRoutes"));
 app.use("/api/career", require("./routes/careerRoutes.js"));
+app.use("/api/careers", require("./routes/careerRoutes.js"));
+app.use("/api/events", require("./routes/eventRoutes"));
+app.use("/api/event", require("./routes/eventRoutes"));
 
 // Health check for ngrok debugging
 app.get("/api/ping", (req, res) => {

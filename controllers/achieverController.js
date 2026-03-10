@@ -289,9 +289,15 @@ exports.getAdminAchivers = async (req, res) => {
 exports.getAchieverById = async (req, res) => {
   try {
     const { id } = req.params;
-    const achiever = await Achiever.findOne({ _id: id, isDeleted: false });
+    let achiever = await Achiever.findOne({ _id: id, isDeleted: false });
+
+    // Fallback search if ID is passed differently
+    if (!achiever) {
+      achiever = await Achiever.findOne({ id: id, isDeleted: false });
+    }
 
     if (!achiever) {
+      console.log(`[getAchieverById] Achiever not found for ID: ${id}`);
       return res.status(404).json({ message: "Achiever not found" });
     }
 

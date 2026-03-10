@@ -188,9 +188,15 @@ exports.getCareersforAdmin = async (req, res) => {
 exports.getCareerById = async (req, res) => {
     try {
         const { id } = req.params;
-        const career = await Career.findOne({ _id: id, isDeleted: false }).lean();
+        let career = await Career.findOne({ _id: id, isDeleted: false }).lean();
+
+        // Fallback search
+        if (!career) {
+            career = await Career.findOne({ id: id, isDeleted: false }).lean();
+        }
 
         if (!career) {
+            console.log(`[getCareerById] Career not found for ID: ${id}`);
             return res.status(404).json({ message: "Career not found" });
         }
 
