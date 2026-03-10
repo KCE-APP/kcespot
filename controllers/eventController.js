@@ -140,6 +140,23 @@ exports.getEventsforAdmin = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+// GET single event by ID
+exports.getEventById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const event = await Event.findOne({ _id: id, isDeleted: false });
+
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    res.json(event);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 // UPDATE event
 exports.updateEvent = async (req, res) => {
   try {

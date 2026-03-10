@@ -4,6 +4,7 @@ const {
   createAchiever,
   getAchievers,
   getAdminAchivers,
+  getAchieverById,
   updateAchiever,
   deleteAchiever,
   updateReaction,
@@ -11,11 +12,12 @@ const {
 } = require("../controllers/achieverController");
 
 const upload = require("../middleware/upload");
-const { protect, adminOnly ,staffOnly} = require("../middleware/authMiddleware");
+const { protect, adminOnly, staffOnly } = require("../middleware/authMiddleware");
 
 router.post("/", protect, staffOnly, upload.any(), createAchiever);
 router.get("/", protect, getAchievers);
-router.get("/admin",protect,staffOnly,getAdminAchivers);
+router.get("/admin", protect, staffOnly, getAdminAchivers);
+router.get("/:id", protect, getAchieverById);
 router.put("/:id", protect, staffOnly, upload.any(), updateAchiever);
 router.delete("/:id", protect, staffOnly, deleteAchiever);
 router.get("/:id/reactions", protect, getAchieverReactions);

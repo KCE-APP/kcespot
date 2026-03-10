@@ -184,6 +184,43 @@ exports.getCareersforAdmin = async (req, res) => {
     }
 };
 
+// GET single career by ID
+exports.getCareerById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const career = await Career.findOne({ _id: id, isDeleted: false }).lean();
+
+        if (!career) {
+            return res.status(404).json({ message: "Career not found" });
+        }
+
+        const reactions = career.reactions || {};
+        const totalReactions =
+            (reactions.r1 || 0) +
+            (reactions.r2 || 0) +
+            (reactions.r3 || 0) +
+            (reactions.r4 || 0) +
+            (reactions.r5 || 0);
+
+        let userReaction = null;
+        if (req.user && req.user.id) {
+            const reaction = await CareerReaction.findOne({
+                user: req.user.id,
+                career: id,
+            });
+            userReaction = reaction ? reaction.type : null;
+        }
+
+        res.json({
+            ...career,
+            totalReactions,
+            userReaction,
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
 
 exports.updateCareer = async (req, res) => {
     try {

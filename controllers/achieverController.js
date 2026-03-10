@@ -136,9 +136,9 @@ exports.getAchievers = async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit)
-      .lean(); 
+      .lean();
 
-    
+
     if (req.user && req.user.id) {
       const achieverIds = achievers.map((a) => a._id);
 
@@ -280,6 +280,42 @@ exports.getAdminAchivers = async (req, res) => {
       currentPage: Number(page),
       totalItems: count,
     });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// GET single achiever by ID
+exports.getAchieverById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const achiever = await Achiever.findOne({ _id: id, isDeleted: false });
+
+    if (!achiever) {
+      return res.status(404).json({ message: "Achiever not found" });
+    }
+
+    // Enrich with reaction data (same logic as list)
+    let enriched = achiever.toObject();
+    const reactions = enriched.reactions || {};
+    enriched.totalReactions =
+      (reactions.r1 || 0) +
+      (reactions.r2 || 0) +
+      (reactions.r3 || 0) +
+      (reactions.r4 || 0) +
+      (reactions.r5 || 0);
+
+    if (req.user && req.user.id) {
+      const userReaction = await Reaction.findOne({
+        user: req.user.id,
+        achiever: id,
+      });
+      enriched.userReaction = userReaction ? userReaction.type : null;
+    } else {
+      enriched.userReaction = null;
+    }
+
+    res.json(enriched);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
