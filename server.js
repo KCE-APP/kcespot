@@ -31,7 +31,7 @@ const corsOptions = {
     return callback(new Error(`CORS blocked: ${origin}`));
   },
   credentials: true,
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"], 
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: [
     "Content-Type",
     "Authorization",
@@ -82,7 +82,7 @@ app.use("/api/unstop", require("./routes/proxyRoutes"));
 app.use("/api/rewards", require("./routes/rewardRoutes"));
 app.use("/api/semester", require("./routes/semesterRoutes"));
 app.use("/api/staff", require("./routes/staffRoutes"));
-app.use("/api/career",require("./routes/careerRoutes.js"));
+app.use("/api/career", require("./routes/careerRoutes.js"));
 
 // Health check for ngrok debugging
 app.get("/api/ping", (req, res) => {
@@ -104,18 +104,18 @@ app.use("/api/host-contribute", (req, res) => {
   return res.json({ message: "hello ace im spotlight" });
 });
 
-// Deep Link Redirection Route
-app.get("/event/:id", (req, res) => {
-  const eventId = req.params.id;
-  const appScheme = `karpagam-spotlight://event/${eventId}`;
+// Generic Deep Link Redirection Helper
+const handleDeepLink = (type, appSchemePrefix) => (req, res) => {
+  const id = req.params.id;
+  const appScheme = `${appSchemePrefix}${id}`;
   // Fallback URL (APK Download Link, Expo Project Page, or Play Store)
-  const fallbackUrl = process.env.FALLBACK_URL || "https://expo.dev/@poovarasa13/my-app"; 
+  const fallbackUrl = process.env.FALLBACK_URL || "https://expo.dev/@poovarasa13/my-app";
 
   const html = `
     <!DOCTYPE html>
     <html>
       <head>
-        <title>View Event</title>
+        <title>View ${type.charAt(0).toUpperCase() + type.slice(1)}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
           body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; text-align: center; padding: 40px 20px; background-color: #f9fafb; }
@@ -130,7 +130,7 @@ app.get("/event/:id", (req, res) => {
       <body>
         <div class="container">
           <h1>Open in Spotlight</h1>
-          <p>You can view this event in the Karpagam Spotlight app.</p>
+          <p>You can view this ${type} in the Karpagam Spotlight app.</p>
           
           <a href="${appScheme}" class="btn">Open App</a>
           
@@ -150,4 +150,9 @@ app.get("/event/:id", (req, res) => {
     </html>
   `;
   res.send(html);
-});
+};
+
+// Deep Link Redirection Routes
+app.get("/event/:id", handleDeepLink("event", "karpagam-spotlight://event/"));
+app.get("/achiever/:id", handleDeepLink("achiever", "karpagam-spotlight://achiever/"));
+app.get("/career/:id", handleDeepLink("career", "karpagam-spotlight://career/"));

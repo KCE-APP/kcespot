@@ -116,7 +116,7 @@ exports.sendAchieverNotification = async (pushTokens, achiever) => {
       data: {
         type: "achiever",
         id: achiever._id.toString(),
-        screen: "EventDetails",
+        screen: "AchieverDetails",
       },
     }));
 
@@ -141,7 +141,7 @@ exports.sendAchieverNotification = async (pushTokens, achiever) => {
       data: {
         type: "achiever",
         id: achiever._id.toString(),
-        screen: "EventDetails",
+        screen: "AchieverDetails",
       },
       tokens: fcmTokens,
     };
