@@ -186,6 +186,7 @@ exports.getCareersforAdmin = async (req, res) => {
 
 // GET single career by ID
 exports.getCareerById = async (req, res) => {
+    console.log(`[getCareerById] Hit with ID: ${req.params.id}`);
     try {
         const { id } = req.params;
         let career = await Career.findOne({ _id: id, isDeleted: false }).lean();
