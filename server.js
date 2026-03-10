@@ -47,7 +47,8 @@ app.use(cors(corsOptions));
 
 // 1. Request Logging - Vital for debugging connectivity
 app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path} - Origin: ${req.headers.origin}`);
+  console.log(`\n>>> [REQUEST] ${req.method} ${req.originalUrl || req.url}`);
+  console.log(`>>> [HEADERS] x-app-client: ${req.headers["x-app-client"]}, Authorization: ${req.headers.authorization ? "Present" : "Missing"}`);
   next();
 });
 

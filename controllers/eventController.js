@@ -143,6 +143,7 @@ exports.getEventsforAdmin = async (req, res) => {
 
 // GET single event by ID
 exports.getEventById = async (req, res) => {
+  console.log(`[getEventById] Hit with ID: ${req.params.id}`);
   try {
     const { id } = req.params;
     let event = await Event.findOne({ _id: id, isDeleted: false });

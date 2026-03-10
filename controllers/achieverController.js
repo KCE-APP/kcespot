@@ -287,6 +287,7 @@ exports.getAdminAchivers = async (req, res) => {
 
 // GET single achiever by ID
 exports.getAchieverById = async (req, res) => {
+  console.log(`[getAchieverById] Hit with ID: ${req.params.id}`);
   try {
     const { id } = req.params;
     let achiever = await Achiever.findOne({ _id: id, isDeleted: false });
@@ -297,9 +298,11 @@ exports.getAchieverById = async (req, res) => {
     }
 
     if (!achiever) {
-      console.log(`[getAchieverById] Achiever not found for ID: ${id}`);
+      console.log(`[getAchieverById] NO RECORD FOUND in DB for ID: ${id}`);
       return res.status(404).json({ message: "Achiever not found" });
     }
+
+    console.log(`[getAchieverById] Record found: ${achiever.name || achiever._id}`);
 
     // Enrich with reaction data (same logic as list)
     let enriched = achiever.toObject();
