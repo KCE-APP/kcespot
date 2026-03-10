@@ -22,6 +22,7 @@ router.post(
     createCareer,
 );
 router.get("/get-career", protect, getCareers);
+router.get("/get-career/:id", protect, getCareerById);
 router.get("/get-career/admin", protect, adminOnly, staffOnly, getCareersforAdmin);
 router.get("/:id", protect, getCareerById);
 router.put(
