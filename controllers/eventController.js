@@ -145,9 +145,15 @@ exports.getEventsforAdmin = async (req, res) => {
 exports.getEventById = async (req, res) => {
   try {
     const { id } = req.params;
-    const event = await Event.findOne({ _id: id, isDeleted: false });
+    let event = await Event.findOne({ _id: id, isDeleted: false });
+
+    // Fallback if ID is passed differently
+    if (!event) {
+      event = await Event.findOne({ id: id, isDeleted: false });
+    }
 
     if (!event) {
+      console.log(`[getEventById] Event not found for ID: ${id}`);
       return res.status(404).json({ message: "Event not found" });
     }
 

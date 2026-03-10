@@ -16,7 +16,6 @@ const { protect, adminOnly, staffOnly } = require("../middleware/authMiddleware"
 
 router.post("/", protect, staffOnly, upload.any(), createAchiever);
 router.get("/", protect, getAchievers);
-router.get("/:id", protect, getAchieverById);
 router.get("/admin", protect, staffOnly, getAdminAchivers);
 router.get("/:id", protect, getAchieverById);
 router.put("/:id", protect, staffOnly, upload.any(), updateAchiever);
