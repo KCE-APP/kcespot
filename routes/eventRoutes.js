@@ -4,6 +4,7 @@ const {
   createEvent,
   getEvents,
   getEventsforAdmin,
+  getEventById,
   updateEvent,
   deleteEvent,
   sendEventInfo,
@@ -11,14 +12,15 @@ const {
 const User = require("../models/User");
 const { sendEventNotification } = require("../service/pushNotificationService");
 const upload = require("../middleware/upload");
-const { adminOnly, protect,staffOnly } = require("../middleware/authMiddleware");
+const { adminOnly, protect, staffOnly } = require("../middleware/authMiddleware");
 
-router.post("/post-event", protect,staffOnly, adminOnly, sendEventInfo)
+router.post("/post-event", protect, staffOnly, adminOnly, sendEventInfo)
 
 
-router.post("/", protect,staffOnly,  upload.single("eventImage"), createEvent);
+router.post("/", protect, staffOnly, upload.single("eventImage"), createEvent);
 router.get("/", protect, getEvents);
-router.get("/admin", protect,staffOnly,  getEventsforAdmin);
+router.get("/admin", protect, staffOnly, getEventsforAdmin);
+router.get("/:id", protect, getEventById);
 router.put(
   "/:id",
   protect,
@@ -26,7 +28,7 @@ router.put(
   upload.single("eventImage"),
   updateEvent,
 );
-router.delete("/:id", protect, staffOnly,deleteEvent);
+router.delete("/:id", protect, staffOnly, deleteEvent);
 
 
 

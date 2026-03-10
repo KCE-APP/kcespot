@@ -6,6 +6,7 @@ const {
     createCareer,
     getCareers,
     getCareersforAdmin,
+    getCareerById,
     updateCareer,
     deleteCareer,
     updateReaction,
@@ -22,6 +23,7 @@ router.post(
 );
 router.get("/get-career", protect, getCareers);
 router.get("/get-career/admin", protect, adminOnly, staffOnly, getCareersforAdmin);
+router.get("/:id", protect, getCareerById);
 router.put(
     "/update-career/:id",
     protect,
