@@ -20,7 +20,7 @@ exports.optimizeImage = async (buffer, originalName) => {
 
     const filename = `img-${Date.now()}-${crypto.randomBytes(4).toString("hex")}.webp`;
     const outputPath = path.join(uploadsDir, filename);
-    const logoPath = path.join(__dirname, "..", "assests", "ki_logo_1.png");
+    const logoPath = path.join(__dirname, "..", "assests", "ki_logo_5.png");
 
     let pipeline = sharp(buffer);
     const metadata = await pipeline.metadata();
@@ -73,7 +73,7 @@ exports.optimizeImage = async (buffer, originalName) => {
  */
 exports.applyWatermark = async (inputPath, outputPath = null) => {
   try {
-    const logoPath = path.join(__dirname, "..", "assests", "ki_logo_1.png");
+    const logoPath = path.join(__dirname, "..", "assests", "ki_logo_5.png");
     
     if (!fs.existsSync(inputPath)) {
       throw new Error(`Input image not found: ${inputPath}`);
