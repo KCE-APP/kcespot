@@ -20,7 +20,7 @@ exports.optimizeImage = async (buffer, originalName) => {
 
     const filename = `img-${Date.now()}-${crypto.randomBytes(4).toString("hex")}.webp`;
     const outputPath = path.join(uploadsDir, filename);
-    const logoPath = path.join(__dirname, "..", "assests", "KI_LOGO3.png");
+    const logoPath = path.join(__dirname, "..", "assests", "ki_logo_1.png");
 
     let pipeline = sharp(buffer);
     const metadata = await pipeline.metadata();
@@ -39,21 +39,8 @@ exports.optimizeImage = async (buffer, originalName) => {
       const logoSize = Math.round(circleSize * 0.7); // Logo width inside circle
 
       // 1. Create the logo buffer
-      const logoBuffer = await sharp(logoPath)
+      const finalWatermark = await sharp(logoPath)
         .resize({ width: logoSize })
-        .toBuffer();
-
-      // 2. Create the white circle background
-      const circleBackground = Buffer.from(
-        `<svg width="${circleSize}" height="${circleSize}">
-          <circle cx="${circleSize / 2}" cy="${circleSize / 2}" r="${circleSize / 2}" fill="white" />
-        </svg>`
-      );
-
-      // 3. Composite logo onto the circle
-      const finalWatermark = await sharp(circleBackground)
-        .composite([{ input: logoBuffer, gravity: "center" }])
-        .png()
         .toBuffer();
 
       // 4. Composite final badge onto the main image (Bottom-Right)
@@ -87,7 +74,7 @@ exports.optimizeImage = async (buffer, originalName) => {
  */
 exports.applyWatermark = async (inputPath, outputPath = null) => {
   try {
-    const logoPath = path.join(__dirname, "..", "assests", "KI_LOGO3.png");
+    const logoPath = path.join(__dirname, "..", "assests", "ki_logo_1.png");
     
     if (!fs.existsSync(inputPath)) {
       throw new Error(`Input image not found: ${inputPath}`);
@@ -106,30 +93,18 @@ exports.applyWatermark = async (inputPath, outputPath = null) => {
     const logoWidth = Math.round(metadata.width * 0.10);
     const padding = Math.round(logoWidth * 0.1); // 10% padding
     
-    // Create a white background for the logo to ensure visibility on all images
+    // Create the logo buffer
     const logoBuffer = await sharp(logoPath).resize({ width: logoWidth }).toBuffer();
     const logoMetadata = await sharp(logoBuffer).metadata();
-    
-    const background = await sharp({
-      create: {
-        width: logoMetadata.width + padding * 2,
-        height: logoMetadata.height + padding * 2,
-        channels: 4,
-        background: { r: 255, g: 255, b: 255, alpha: 0.8 } // Semi-transparent white
-      }
-    })
-    .composite([{ input: logoBuffer, gravity: "center" }])
-    .png()
-    .toBuffer();
 
-    // Composite the logo with background onto the image
+    // Composite the logo onto the image
     const watermarkedImage = await image
       .composite([
         {
-          input: background,
+          input: logoBuffer,
           gravity: "southwest", // Bottom-left corner
           blend: "over",
-          top: metadata.height - (logoMetadata.height + padding * 3), // Add some margin from edges
+          bottom: padding,
           left: padding,
         },
       ])
