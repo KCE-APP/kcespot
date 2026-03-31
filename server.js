@@ -87,6 +87,8 @@ app.use("/api/career", require("./routes/careerRoutes.js"));
 app.use("/api/careers", require("./routes/careerRoutes.js"));
 app.use("/api/events", require("./routes/eventRoutes"));
 app.use("/api/event", require("./routes/eventRoutes"));
+app.use("/api/assignments", require("./routes/assignmentRoutes"));
+app.use("/api/certificates", require("./routes/certificateRoutes"));
 
 // Health check for ngrok debugging
 app.get("/api/ping", (req, res) => {

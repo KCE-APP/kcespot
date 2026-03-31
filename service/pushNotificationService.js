@@ -241,3 +241,71 @@ exports.sendSubmissionStatusNotification = async (
     }
   }
 };
+
+exports.sendAssignmentNotification = async (pushTokens, assignment) => {
+  const expoTokens = [];
+  const fcmTokens = [];
+
+  if (!pushTokens || pushTokens.length === 0) return;
+
+  for (const token of pushTokens) {
+    if (Expo.isExpoPushToken(token)) {
+      expoTokens.push(token);
+    } else {
+      fcmTokens.push(token);
+    }
+  }
+
+  const title = `New Assignment: ${assignment.title}`;
+  const body = `You have a new assignment for ${assignment.department}. Due: ${assignment.dueDate ? new Date(assignment.dueDate).toLocaleDateString() : "No due date"}`;
+
+  // --- Send Expo Notifications ---
+  if (expoTokens.length > 0) {
+    const messages = expoTokens.map((token) => ({
+      to: token,
+      sound: "default",
+      title: title,
+      body: body,
+      data: {
+        type: "assignment",
+        id: assignment._id.toString(),
+        screen: "AssignmentDetails",
+      },
+    }));
+
+    const chunks = expo.chunkPushNotifications(messages);
+
+    for (const chunk of chunks) {
+      try {
+        await expo.sendPushNotificationsAsync(chunk);
+      } catch (error) {
+        console.error("Expo push error (Assignment):", error);
+      }
+    }
+  }
+
+  // --- Send FCM Notifications ---
+  if (fcmTokens.length > 0) {
+    const message = {
+      notification: {
+        title: title,
+        body: body,
+      },
+      data: {
+        type: "assignment",
+        id: assignment._id.toString(),
+        screen: "AssignmentDetails",
+      },
+      tokens: fcmTokens,
+    };
+
+    try {
+      const response = await admin.messaging().sendEachForMulticast(message);
+      if (response.failureCount > 0) {
+        console.error("FCM error (Assignment):", response.responses);
+      }
+    } catch (error) {
+      console.error("FCM push global error (Assignment):", error);
+    }
+  }
+};
