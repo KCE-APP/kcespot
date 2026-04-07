@@ -14,6 +14,18 @@ const submissionSchema = new mongoose.Schema(
     },
     submissionLink: { type: String },
     fileUrl: { type: String },
+    status: {
+      type: String,
+      enum: ["pending", "accepted", "rejected", "reupload"],
+      default: "pending",
+    },
+    marks: { type: Number, min: 0, max: 100, default: null },
+    reviewRemarks: { type: String },
+    reviewedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Staff",
+    },
+    reviewedAt: { type: Date },
     submittedAt: { type: Date, default: Date.now },
   },
   { timestamps: true }
