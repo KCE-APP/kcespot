@@ -173,6 +173,11 @@ exports.reviewSubmission = async (req, res) => {
         return res.status(400).json({ message: "Marks must be between 0 and 100" });
       }
       submission.marks = marks;
+    } else if (status === "reupload") {
+      // Clear the previously uploaded bad file/link so the student can submit a new one
+      submission.submissionLink = null;
+      submission.fileUrl = null;
+      submission.marks = null;
     }
 
     await submission.save();
