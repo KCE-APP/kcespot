@@ -12,6 +12,7 @@ exports.createAssignment = async (req, res) => {
       instructions,
       department,
       batch,
+      semester,
       type,
       resourceLink,
       certificateLink,
@@ -21,7 +22,7 @@ exports.createAssignment = async (req, res) => {
       dueDate,
     } = req.body;
 
-    if (!title || !department || !batch || !type) {
+    if (!title || !department || !batch || !semester || !type) {
       return res.status(400).json({ message: "Required fields missing" });
     }
 
@@ -42,6 +43,7 @@ exports.createAssignment = async (req, res) => {
       instructions,
       department,
       batch,
+      semester,
       type,
       resourceLink,
       certificateLink,
@@ -171,6 +173,11 @@ exports.reviewSubmission = async (req, res) => {
         return res.status(400).json({ message: "Marks must be between 0 and 100" });
       }
       submission.marks = marks;
+    } else if (status === "reupload") {
+      // Clear the previously uploaded bad file/link so the student can submit a new one
+      submission.submissionLink = null;
+      submission.fileUrl = null;
+      submission.marks = null;
     }
 
     await submission.save();
@@ -241,11 +248,12 @@ exports.getGradedCertificate = async (req, res) => {
 // 📋 GET ALL ASSIGNMENTS (Staff/Admin)
 exports.getAllAssignments = async (req, res) => {
   try {
-    const { page = 1, limit = 10, department, batch, status, type } = req.query;
+    const { page = 1, limit = 10, department, batch, semester, status, type } = req.query;
 
     const query = {};
     if (department) query.department = department;
     if (batch) query.batch = batch;
+    if (semester) query.semester = parseInt(semester, 10);
     if (status) query.status = status;
     if (type) query.type = type;
 
