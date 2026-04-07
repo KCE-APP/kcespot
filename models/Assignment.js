@@ -7,6 +7,7 @@ const assignmentSchema = new mongoose.Schema(
     instructions: { type: String },
     department: { type: String, required: true },
     batch: { type: String, required: true },
+    semester: { type: Number, required: true },
     type: {
       type: String,
       enum: ["assignment", "certification"],
@@ -43,6 +44,6 @@ const assignmentSchema = new mongoose.Schema(
 
 // Add index for performance in student queries
 assignmentSchema.index({ assignedStudents: 1 });
-assignmentSchema.index({ department: 1, batch: 1 });
+assignmentSchema.index({ department: 1, batch: 1, semester: 1 });
 
 module.exports = mongoose.model("Assignment", assignmentSchema);
