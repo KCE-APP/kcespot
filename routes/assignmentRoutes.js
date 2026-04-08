@@ -16,6 +16,7 @@ router.post("/semester-rollover", protect, staffOnly, assignmentController.rollo
 
 // 👤 Student only
 router.get("/my", protect, userOnly, assignmentController.getMyAssignments);
+router.get("/:assignmentId/my-submission", protect, userOnly, assignmentController.getMySubmission);
 router.post("/submit", protect, userOnly, upload.single("file"), assignmentController.submitAssignment);
 router.get("/submissions/:submissionId/certificate-data", protect, userOnly, assignmentController.getGradedCertificate);
 
