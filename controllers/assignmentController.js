@@ -1,7 +1,7 @@
 const Assignment = require("../models/Assignment");
 const Submission = require("../models/Submission");
 const User = require("../models/User");
-const { sendAssignmentNotification } = require("../service/pushNotificationService");
+const { sendAssignmentNotification, sendCertificateApprovedNotification } = require("../service/pushNotificationService");
 const imageService = require("../service/imageService");
 const path = require("path");
 
@@ -205,6 +205,22 @@ exports.reviewSubmission = async (req, res) => {
     }
 
     await submission.save();
+
+    // Send notification when submission is accepted (certificate approved)
+    if (status === "accepted") {
+      const student = await User.findById(submission.studentId);
+      const assignment = await Assignment.findById(submission.assignmentId);
+      
+      if (student && student.pushTokens && student.pushTokens.length > 0) {
+        sendCertificateApprovedNotification(
+          student.pushTokens,
+          submission,
+          assignment ? assignment.title : "Assignment"
+        ).catch((err) =>
+          console.error("Certificate notification error:", err)
+        );
+      }
+    }
 
     res.json({ message: "Submission reviewed successfully", submission });
   } catch (err) {

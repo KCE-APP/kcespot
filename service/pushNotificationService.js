@@ -202,6 +202,7 @@ exports.sendSubmissionStatusNotification = async (
         type: "submission_status",
         id: submission._id.toString(),
         status: status,
+        screen: "MyAchievements",
       },
     }));
 
@@ -227,6 +228,7 @@ exports.sendSubmissionStatusNotification = async (
         type: "submission_status",
         id: submission._id.toString(),
         status: status,
+        screen: "MyAchievements",
       },
       tokens: fcmTokens,
     };
@@ -306,6 +308,74 @@ exports.sendAssignmentNotification = async (pushTokens, assignment) => {
       }
     } catch (error) {
       console.error("FCM push global error (Assignment):", error);
+    }
+  }
+};
+
+exports.sendCertificateApprovedNotification = async (pushTokens, submission, assignmentTitle) => {
+  const expoTokens = [];
+  const fcmTokens = [];
+
+  if (!pushTokens || pushTokens.length === 0) return;
+
+  for (const token of pushTokens) {
+    if (Expo.isExpoPushToken(token)) {
+      expoTokens.push(token);
+    } else {
+      fcmTokens.push(token);
+    }
+  }
+
+  const title = "Certificate Approved! 🎓";
+  const body = `Your certificate for "${assignmentTitle}" has been approved and is ready to view.`;
+
+  // --- Send Expo Notifications ---
+  if (expoTokens.length > 0) {
+    const messages = expoTokens.map((token) => ({
+      to: token,
+      sound: "default",
+      title: title,
+      body: body,
+      data: {
+        type: "certificate",
+        id: submission._id.toString(),
+        screen: "MyCertificates",
+      },
+    }));
+
+    const chunks = expo.chunkPushNotifications(messages);
+
+    for (const chunk of chunks) {
+      try {
+        await expo.sendPushNotificationsAsync(chunk);
+      } catch (error) {
+        console.error("Expo push error (Certificate):", error);
+      }
+    }
+  }
+
+  // --- Send FCM Notifications (Firebase) ---
+  if (fcmTokens.length > 0) {
+    const message = {
+      notification: {
+        title: title,
+        body: body,
+      },
+      data: {
+        type: "certificate",
+        id: submission._id.toString(),
+        screen: "MyCertificates",
+      },
+      tokens: fcmTokens,
+    };
+
+    try {
+      const response = await admin.messaging().sendEachForMulticast(message);
+      if (response.failureCount > 0) {
+        console.error("FCM error (Certificate):", response.responses);
+      }
+    } catch (error) {
+      console.error("FCM push global error (Certificate):", error);
     }
   }
 };
