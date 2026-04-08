@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const assignmentController = require("../controllers/assignmentController");
 const { protect, staffOnly, userOnly } = require("../middleware/authMiddleware");
+const upload = require("../middleware/upload");
+
 
 // 🔑 Staff/Admin only
 router.post("/create", protect, staffOnly, assignmentController.createAssignment);
@@ -14,7 +16,7 @@ router.post("/semester-rollover", protect, staffOnly, assignmentController.rollo
 
 // 👤 Student only
 router.get("/my", protect, userOnly, assignmentController.getMyAssignments);
-router.post("/submit", protect, userOnly, assignmentController.submitAssignment);
+router.post("/submit", protect, userOnly, upload.single("file"), assignmentController.submitAssignment);
 router.get("/submissions/:submissionId/certificate-data", protect, userOnly, assignmentController.getGradedCertificate);
 
 module.exports = router;

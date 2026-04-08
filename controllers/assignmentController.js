@@ -2,6 +2,8 @@ const Assignment = require("../models/Assignment");
 const Submission = require("../models/Submission");
 const User = require("../models/User");
 const { sendAssignmentNotification } = require("../service/pushNotificationService");
+const imageService = require("../service/imageService");
+const path = require("path");
 
 // 🆕 CREATE ASSIGNMENT (Staff/Admin)
 exports.createAssignment = async (req, res) => {
@@ -104,8 +106,9 @@ exports.getMyAssignments = async (req, res) => {
 // 📤 SUBMIT ASSIGNMENT (Student Only)
 exports.submitAssignment = async (req, res) => {
   try {
-    const { assignmentId, submissionLink, fileUrl } = req.body;
+    const { assignmentId, submissionLink } = req.body;
     const studentId = req.user.id;
+    let fileUrl = req.body.fileUrl; // Fallback for backward compatibility/external URLs if needed
 
     if (!assignmentId) {
       return res.status(400).json({ message: "Assignment ID required" });
@@ -121,12 +124,25 @@ exports.submitAssignment = async (req, res) => {
       return res.status(403).json({ message: "You are not assigned to this assignment" });
     }
 
+    // Handle File Upload if present
+    if (req.file) {
+      const ext = path.extname(req.file.originalname).toLowerCase();
+      if ([".jpg", ".jpeg", ".png", ".webp"].includes(ext)) {
+        // Optimize and watermark images
+        fileUrl = await imageService.optimizeImage(req.file.buffer, req.file.originalname);
+      }
+    }
+
     // Handle existing submission (update or prevent)
     let submission = await Submission.findOne({ studentId, assignmentId });
     if (submission) {
-      submission.submissionLink = submissionLink || submission.submissionLink;
-      submission.fileUrl = fileUrl || submission.fileUrl;
+      if (submissionLink) submission.submissionLink = submissionLink;
+      if (fileUrl) submission.fileUrl = fileUrl;
       submission.submittedAt = Date.now();
+      // If updating, reset status to pending if it was rejected or reupload requested
+      if (["rejected", "reupload"].includes(submission.status)) {
+        submission.status = "pending";
+      }
       await submission.save();
     } else {
       submission = new Submission({
@@ -141,6 +157,7 @@ exports.submitAssignment = async (req, res) => {
     res.json({
       message: "Submission saved successfully",
       submissionId: submission._id,
+      fileUrl: submission.fileUrl,
     });
   } catch (err) {
     console.error("Submit assignment error:", err);
