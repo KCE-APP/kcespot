@@ -280,11 +280,19 @@ exports.getMySubmission = async (req, res) => {
     const submission = await Submission.findOne({ assignmentId, studentId })
       .populate("reviewedBy", "name");
 
+    // Return 200 with null if no submission - this is valid (student hasn't submitted yet)
     if (!submission) {
-      return res.status(404).json({ message: "No submission found for this assignment" });
+      return res.json({
+        message: "No submission yet",
+        submission: null,
+        status: "not_submitted"
+      });
     }
 
-    res.json(submission);
+    res.json({
+      submission,
+      status: submission.status
+    });
   } catch (err) {
     console.error("Get my submission error:", err);
     res.status(500).json({ message: "Server error" });
