@@ -133,16 +133,22 @@ exports.submitAssignment = async (req, res) => {
       }
     }
 
-    // Handle existing submission (update or prevent)
+    // Handle existing submission (prevent multiple submissions unless rejected/reupload)
     let submission = await Submission.findOne({ studentId, assignmentId });
     if (submission) {
+      if (submission.status === "pending") {
+        return res.status(400).json({ message: "Your submission is already pending review. You cannot resubmit at this time." });
+      }
+      if (submission.status === "accepted") {
+        return res.status(400).json({ message: "Your submission has already been accepted and graded." });
+      }
+
+      // If we are here, status is 'rejected' or 'reupload'
       if (submissionLink) submission.submissionLink = submissionLink;
       if (fileUrl) submission.fileUrl = fileUrl;
       submission.submittedAt = Date.now();
-      // If updating, reset status to pending if it was rejected or reupload requested
-      if (["rejected", "reupload"].includes(submission.status)) {
-        submission.status = "pending";
-      }
+      submission.status = "pending"; // Reset to pending for staff review
+      
       await submission.save();
     } else {
       submission = new Submission({
@@ -150,6 +156,7 @@ exports.submitAssignment = async (req, res) => {
         assignmentId,
         submissionLink,
         fileUrl,
+        status: "pending",
       });
       await submission.save();
     }
@@ -258,6 +265,28 @@ exports.getGradedCertificate = async (req, res) => {
     });
   } catch (err) {
     console.error("Get graded certificate error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+
+// 👤 GET MY SUBMISSION (Student Only)
+exports.getMySubmission = async (req, res) => {
+  try {
+    const { assignmentId } = req.params;
+    const studentId = req.user.id;
+
+    const submission = await Submission.findOne({ assignmentId, studentId })
+      .populate("reviewedBy", "name");
+
+    if (!submission) {
+      return res.status(404).json({ message: "No submission found for this assignment" });
+    }
+
+    res.json(submission);
+  } catch (err) {
+    console.error("Get my submission error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
