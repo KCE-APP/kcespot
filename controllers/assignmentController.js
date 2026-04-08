@@ -291,7 +291,32 @@ exports.getMySubmission = async (req, res) => {
   }
 };
 
-// 📋 GET ALL ASSIGNMENTS (Staff/Admin)
+// � GET ASSIGNMENT BY ID (Any authenticated user)
+exports.getAssignmentById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    console.log(`[getAssignmentById] Hit with ID: ${id}`);
+
+    let assignment = await Assignment.findOne({ _id: id, status: "active" })
+      .populate("createdBy", "name email")
+      .lean();
+
+    if (!assignment) {
+      console.log(`[getAssignmentById] NO RECORD FOUND in DB for ID: ${id}`);
+      return res.status(404).json({ message: "Assignment not found" });
+    }
+
+    console.log(`[getAssignmentById] Record found: ${assignment.title}`);
+
+    res.json(assignment);
+  } catch (err) {
+    console.error("Get assignment by ID error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// �📋 GET ALL ASSIGNMENTS (Staff/Admin)
 exports.getAllAssignments = async (req, res) => {
   try {
     const { page = 1, limit = 10, department, batch, semester, status, type } = req.query;
