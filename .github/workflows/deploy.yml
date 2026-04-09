@@ -44,3 +44,6 @@ jobs:
             # Start or Restart using ecosystem file
             pm2 startOrRestart ecosystem.config.js --env production
             pm2 save
+            
+            # Restart all PM2 processes
+            pm2 restart all
