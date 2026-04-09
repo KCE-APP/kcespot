@@ -458,3 +458,66 @@ exports.getAssignmentSubmissions = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+// 🔄 REASSIGN STUDENTS (Staff/Admin) - Assign to newly registered students
+exports.reassignStudents = async (req, res) => {
+  try {
+    const { assignmentId } = req.params;
+
+    // Get the assignment
+    const assignment = await Assignment.findById(assignmentId);
+    if (!assignment) {
+      return res.status(404).json({ message: "Assignment not found" });
+    }
+
+    // Find all active students matching the assignment criteria (department, batch, semester)
+    const eligibleStudents = await User.find({
+      department: assignment.department,
+      batch: assignment.batch,
+      role: { $in: ["user", "student"] },
+      status: true,
+    });
+
+    // Filter students who are NOT already assigned
+    const newStudents = eligibleStudents.filter(
+      (student) => !assignment.assignedStudents.includes(student._id)
+    );
+
+    if (newStudents.length === 0) {
+      return res.json({
+        message: "No new students to assign",
+        newlyAssignedCount: 0,
+        totalAssignedCount: assignment.assignedStudents.length,
+      });
+    }
+
+    // Add new students to the assignment
+    const newStudentIds = newStudents.map((s) => s._id);
+    assignment.assignedStudents.push(...newStudentIds);
+    await assignment.save();
+
+    // Send notifications to newly assigned students
+    const allPushTokens = newStudents.reduce((acc, student) => {
+      if (student.pushTokens && student.pushTokens.length > 0) {
+        acc.push(...student.pushTokens);
+      }
+      return acc;
+    }, []);
+
+    if (allPushTokens.length > 0) {
+      // Async notification - don't block response
+      sendAssignmentNotification(allPushTokens, assignment).catch((err) =>
+        console.error("Notification trigger error:", err)
+      );
+    }
+
+    res.json({
+      message: "Students reassigned successfully",
+      newlyAssignedCount: newStudents.length,
+      totalAssignedCount: assignment.assignedStudents.length,
+    });
+  } catch (err) {
+    console.error("Reassign students error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};

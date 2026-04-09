@@ -17,6 +17,7 @@ router.get("/submissions/:submissionId/certificate-data", protect, userOnly, ass
 // Nested specific routes BEFORE generic /:id route
 router.get("/:assignmentId/submissions", protect, staffOnly, assignmentController.getAssignmentSubmissions);
 router.patch("/submissions/:submissionId/review", protect, staffOnly, assignmentController.reviewSubmission);
+router.post("/:assignmentId/reassign", protect, staffOnly, assignmentController.reassignStudents);
 router.get("/:assignmentId/my-submission", protect, userOnly, assignmentController.getMySubmission);
 
 // 📄 Generic routes last (lowest priority)
