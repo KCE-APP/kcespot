@@ -2,24 +2,25 @@ const sharp = require("sharp");
 const path = require("path");
 const fs = require("fs");
 const crypto = require("crypto");
+const cloudinary = require("cloudinary").v2;
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 /**
  * Optimizes an image: resizes to max width 1080px, converts to WebP (quality 75),
- * and applies a watermark logo.
+ * applies a watermark logo, and uploads to Cloudinary.
  * 
  * @param {Buffer} buffer - The image data buffer.
  * @param {string} originalName - Original filename to extract extension or just for logging.
- * @returns {Promise<string>} - The relative path to the saved WebP image.
+ * @returns {Promise<string>} - The secure URL of the uploaded image on Cloudinary.
  */
 exports.optimizeImage = async (buffer, originalName) => {
   try {
-    const uploadsDir = path.join(__dirname, "..", "uploads");
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
-    }
-
-    const filename = `img-${Date.now()}-${crypto.randomBytes(4).toString("hex")}.webp`;
-    const outputPath = path.join(uploadsDir, filename);
     const logoPath = path.join(__dirname, "..", "assests", "ki_logo.png");
 
     let pipeline = sharp(buffer);
@@ -37,12 +38,10 @@ exports.optimizeImage = async (buffer, originalName) => {
       const targetWidth = Math.min(metadata.width, 1080);
       const logoSize = Math.round(targetWidth * 0.12); // Logo width (Increased to 15%)
 
-      // 1. Create the logo buffer
       const finalWatermark = await sharp(logoPath)
         .resize({ width: logoSize })
         .toBuffer();
 
-      // 4. Composite final badge onto the main image (Bottom-Right)
       pipeline = pipeline.composite([
         {
           input: finalWatermark,
@@ -52,15 +51,35 @@ exports.optimizeImage = async (buffer, originalName) => {
       ]);
     }
 
-    await pipeline
+    // Convert to WebP buffer
+    const processedBuffer = await pipeline
       .webp({ quality: 75 })
-      .toFile(outputPath);
+      .toBuffer();
 
-    console.log(`Optimized WebP image saved: ${outputPath}`);
-    return `uploads/${filename}`;
+    // Upload to Cloudinary
+    return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: "spotlight_uploads",
+          public_id: `img-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`,
+          format: "webp"
+        },
+        (error, result) => {
+          if (error) {
+            console.error("Cloudinary upload error:", error);
+            return reject(new Error("Cloudinary upload failed."));
+          }
+          console.log(`Image uploaded to Cloudinary: ${result.secure_url}`);
+          resolve(result.secure_url);
+        }
+      );
+
+      uploadStream.end(processedBuffer);
+    });
+
   } catch (error) {
-    console.error("Error optimizing image:", error);
-    throw new Error("Failed to process and optimize image.");
+    console.error("Error optimizing and uploading image:", error);
+    throw new Error("Failed to process and upload image.");
   }
 };
 
