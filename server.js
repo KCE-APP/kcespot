@@ -171,3 +171,8 @@ app.get("/event/career/:id", handleDeepLink("career", "karpagam-spotlight://care
 app.get("/health", (req, res) => {
   res.status(200).send("OK");
 });
+
+
+app.get("/", (req, res) => {
+  res.status(200).send("Server is Running...");
+});
