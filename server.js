@@ -166,3 +166,8 @@ app.get("/career/:id", handleDeepLink("career", "karpagam-spotlight://career/"))
 // Support for prefixed routes used by the app's share functionality
 app.get("/event/achiever/:id", handleDeepLink("achiever", "karpagam-spotlight://achiever/"));
 app.get("/event/career/:id", handleDeepLink("career", "karpagam-spotlight://career/"));
+
+
+app.get("/health", (req, res) => {
+  res.status(200).send("OK");
+});
